@@ -6,8 +6,8 @@ require_relative "al_cookie/version"
 
 module AlCookie
   PLUGIN_ROOT = File.expand_path("..", __dir__)
-  TEMPLATES_ROOT = File.join(PLUGIN_ROOT, "templates")
-  ASSETS_ROOT = File.join(PLUGIN_ROOT, "assets")
+  TEMPLATES_ROOT = File.join(PLUGIN_ROOT, "lib", "templates")
+  ASSETS_ROOT = File.join(PLUGIN_ROOT, "lib", "assets")
 
   class PluginStaticFile < Jekyll::StaticFile; end
 
