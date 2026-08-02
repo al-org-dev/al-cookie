@@ -7,7 +7,12 @@ require_relative "al_cookie/version"
 module AlCookie
   PLUGIN_ROOT = File.expand_path("..", __dir__)
   TEMPLATES_ROOT = File.join(PLUGIN_ROOT, "lib", "templates")
-  ASSETS_ROOT = File.join(PLUGIN_ROOT, "lib", "assets")
+  # Jekyll writes a StaticFile to <dest>/<dir>/<name>, where <dir> is relative to
+  # the base passed to the constructor. That base must be lib/, not the gem root,
+  # or the runtime lands at /lib/assets/al_cookie/... while the script tag below
+  # points at /assets/al_cookie/... .
+  LIB_ROOT = __dir__
+  ASSETS_ROOT = File.join(LIB_ROOT, "assets")
 
   class PluginStaticFile < Jekyll::StaticFile; end
 
@@ -25,6 +30,14 @@ module AlCookie
     template.render(payload, registers: context.registers)
   end
 
+  # [relative_dir, filename] for everything this gem publishes. Exposed so the
+  # destination path can be asserted without booting a full Jekyll site.
+  def asset_entries
+    Dir.glob(File.join(ASSETS_ROOT, "**", "*")).sort.reject { |p| File.directory?(p) }.map do |source_path|
+      [File.dirname(source_path).sub("#{LIB_ROOT}/", ""), File.basename(source_path)]
+    end
+  end
+
   class AssetsGenerator < Jekyll::Generator
     safe true
     priority :low
@@ -35,8 +48,8 @@ module AlCookie
       Dir.glob(File.join(ASSETS_ROOT, "**", "*")).sort.each do |source_path|
         next if File.directory?(source_path)
 
-        relative_dir = File.dirname(source_path).sub("#{PLUGIN_ROOT}/", "")
-        site.static_files << PluginStaticFile.new(site, PLUGIN_ROOT, relative_dir, File.basename(source_path))
+        relative_dir = File.dirname(source_path).sub("#{LIB_ROOT}/", "")
+        site.static_files << PluginStaticFile.new(site, LIB_ROOT, relative_dir, File.basename(source_path))
       end
     end
   end
